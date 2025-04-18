@@ -2,15 +2,24 @@ import puppeteer from "puppeteer";
 import { Matrix } from "./modules/matrix.js";
 
 const convertMagmaToMatrices = function(groupInfo) { // TODO: need to fix w/ generators over Z, which is like the first 2 only? 
+    if (groupInfo.generators.includes("Integers()")) {
+        return {
+            name: groupInfo.name,
+            order: groupInfo.order,
+            glforder: Number.MAX_SAFE_INTEGER, 
+            generators: Matrix.identity(Number.MAX_SAFE_INTEGER, 1)
+        }
+    }
+    
     const pattern = /-?\d+/g; 
     let matches = groupInfo.generators.match(pattern); 
     let data = matches ? matches.map(Number) : [] ;
     console.log(data); 
     
-    let dim = data[0] ? data[0] : null; 
-    let glf = data[1] ? data[1] : null;  
+    const dim = data[0] ? data[0] : null; 
+    const glf = data[1] ? data[1] : null;  
+    const rawGenerators = []; 
     let k = 2; 
-    let rawGenerators = []; 
     while (k < data.length) { 
         let gen = []; 
         for (let i = 0; i < dim; i++) {
@@ -23,9 +32,9 @@ const convertMagmaToMatrices = function(groupInfo) { // TODO: need to fix w/ gen
         }
         rawGenerators.push(gen);
     }
-    console.log(rawGenerators); 
+    // console.log(rawGenerators); 
 
-    generators = []; 
+    const generators = []; 
 
     rawGenerators.forEach((mtx) => {
         let temp = new Matrix(glf, dim); 

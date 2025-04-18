@@ -38,7 +38,7 @@ export class Matrix {
         this.assert((this.cols == this.rows), "not square!", ln); 
     }
 
-    add = function(mtx) {
+    add(mtx) {
         this.assertDim(mtx, 25); 
         this.assertNonEmpty(26); 
         mtx.assertNonEmpty(27);
@@ -51,7 +51,7 @@ export class Matrix {
         }
     }
 
-    mult = function(mtx) { // right-mult by mtx
+    mult(mtx) { // right-mult by mtx
         // this.assertDim(mtx, 48); 
         /// this.assertNonEmpty(49);
         // mtx.assertNonEmpty(50); 
@@ -96,7 +96,7 @@ export class Matrix {
         return ( i % 2 == 0 ? (-1) : 1 )
     }
 
-    det = function() { 
+    det() { 
         // this.assertNonEmpty(70); // TODO: NEED TO FIX THIS LINE LATER, EMPTY MATRIX ISSUE?
         this.assertSquare(71); 
         let sol = 0; 
@@ -112,7 +112,7 @@ export class Matrix {
         return sol % this.glf.order; 
     }        
 
-    subMatrix = function(row, column) { // if elements belong in certain rows, certain columns, not taken. 
+    subMatrix() { // if elements belong in certain rows, certain columns, not taken. 
         let sol = new Matrix(this.glf.order, this.rows-1, this.cols-1);
 
         for (let i = 0, si = 0; i < this.rows; i++) {
@@ -128,7 +128,7 @@ export class Matrix {
         return sol; 
     }
     
-    transpose = function() {
+    transpose() {
         if (this.rows == 1) {
             return this; // this may cause problems but its fine for now, since 1x1 matrices represent cyclic groups C_n 
         }
@@ -144,7 +144,7 @@ export class Matrix {
     }
 
     
-    cofactor = function() { 
+    cofactor() { 
         // console.log("taking cofactor of: " + this.contents);
         this.assertSquare(127); 
         if (this.rows == 1) {
@@ -164,7 +164,7 @@ export class Matrix {
      * 
      * @returns 
      */
-    adjugate = function() { 
+    adjugate() { 
         /*
         if (this.rows === 2 && this.cols === 2) { 
             let sol = new Matrix(this.glf.order, 2, 2); 
@@ -187,7 +187,7 @@ export class Matrix {
      * 
      * @returns 
      */
-    invert = function() { // finally, moment of truth!
+    invert() { // finally, moment of truth!
         // console.log("given matrix is: " + this); 
         if (this.elems == [[-1]]) {
             return this;
