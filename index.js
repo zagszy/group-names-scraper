@@ -1,60 +1,80 @@
 import puppeteer from "puppeteer";
 import { Matrix } from "./modules/matrix.js";
+import * as fs from "fs"; 
 
-const convertMagmaToMatrices = function(groupInfo) { // TODO: need to fix w/ generators over Z, which is like the first 2 only? 
+// TODO: c2xs4 -> example of group with generators over Z but 3x3, fix in magmaConvert...
+// TODO: Order values are grabbed wrong -> grab on GROUP INFORMATION PAGE ITSELF rather than homepage
+// TODO: running into issues writing 2 specific groups: c2xdic6, c11:c5. Need to investigate. 
+
+let first = true; 
+const file = fs.createWriteStream('output.json'); 
+file.write('[\n'); 
+
+
+function writeFile(g) { // stringify cant handle the large nature of generators... write sequentially. 
+    return new Promise((resolve) => { // weird stack exchange magic... at least im learning about resolving backpressure 
+        try {
+            const data = JSON.stringify(g);
+        const chunk = (first ? '' : ',\n') + data; 
+        first = false;
+
+        if (!file.write(chunk)) {
+            file.once('drain', resolve);
+        } else {
+            resolve(); 
+        }
+
+        console.log("writing: " + data + " to file");
+        } catch(err) {
+            console.log("ran into error with: " + data);
+        }  
+    })
+}
+
+const convertMagmaToMatrices = function(groupInfo) { 
+    const pattern = /-?\d+/g; 
+    const matches = groupInfo.generators.match(pattern); 
+    const rawGenerators = []; 
+    // const generators = []; 
+    const data = matches ? matches.map(Number) : [] ;
+
     if (groupInfo.generators.includes("Integers()")) {
+        let k = 1; 
+        while (k < data.length) { 
+            rawGenerators.push([[data[k]]]);
+            k++;
+        }
         return {
             name: groupInfo.name,
             order: groupInfo.order,
             glforder: Number.MAX_SAFE_INTEGER, 
-            generators: Matrix.identity(Number.MAX_SAFE_INTEGER, 1)
+            generators: rawGenerators
         }
     }
-    
-    const pattern = /-?\d+/g; 
-    let matches = groupInfo.generators.match(pattern); 
-    let data = matches ? matches.map(Number) : [] ;
-    console.log(data); 
-    
-    const dim = data[0] ? data[0] : null; 
-    const glf = data[1] ? data[1] : null;  
-    const rawGenerators = []; 
+        
+    const dim = data[0] ? data[0] : null; // data[0] = generator dimensions
+    const glf = data[1] ? data[1] : null; // data[1] = order of glf of generators
     let k = 2; 
+
     while (k < data.length) { 
         let gen = []; 
         for (let i = 0; i < dim; i++) {
             let row = [];
             for (let j = 0; j < dim; j++) { 
                 row.push(data[k]); 
-                k++ 
+                k++;                       // <- TERMINATION CONDITION!!! DONT NEED TO SUS OUT THIS CODE
             }
             gen.push(row); 
         }
         rawGenerators.push(gen);
     }
-    // console.log(rawGenerators); 
-
-    const generators = []; 
-
-    rawGenerators.forEach((mtx) => {
-        let temp = new Matrix(glf, dim); 
-        temp.contents = mtx; 
-        generators.push(temp);
-    })
-
-    console.log({
-        name: groupInfo.name,
-        glforder: glf, 
-        generators: generators
-    })
 
     return {
         name: groupInfo.name,
         order: groupInfo.order,
         glforder: glf, 
-        generators: generators
+        generators: rawGenerators
     }
-
 } 
 
 
@@ -76,27 +96,32 @@ const getGroupLinks = async() => {
                 const orderText = cells[2]?.textContent.trim();                         // 3. .map(row => ...) converts each 1st column into an array
                 const order = parseInt(orderText, 10);                                  // anyways, cells grabs all cells in the row, each row 6 columns, 
                 // we only want 0 for name + href, 2 order of group
-                return nameLink ? { 
-                    name: nameLink.textContent.trim(), 
+                const name = "";
+                const test = nameLink ? { 
+                    name: cells[0]?.id ?? nameLink.textContent.trim(), 
                     href: nameLink.href, 
                     order: order 
                 } : null;
+
+                // console.log(test);
+                return test 
             });
 
             allRows = allRows.concat(rows);
         });
-
         return allRows.filter(Boolean);
     });
 
-    // console.log(groupLinks);
+    console.log(groupLinks);
 
-    const groupData = []; 
-    const selector = ['#shs5', '.shs5', 'shs6', 'pre']; // site lists magma code under numerous classes/ids, odd. anyways not really any choice
+    const selector = ['#shs5', '.shs5', '.shs6', 'pre', "#textmat", "#shs6"]; // site lists magma code under numerous classes/ids, odd. anyways not really any choice
     let code = null; 
+    let duplicate = new Set(); 
 
-    for (let data of groupLinks) {
-        await page.goto(data.href);
+    while (groupLinks.length > 0) {
+        const data = groupLinks.shift();
+        await page.goto(data.href); 
+        // console.log("working: " + data.name + ", "+ data.href);
         for (const filter of selector) { 
             const magma = await page.evaluate((filter) => {
                 const temp = document.querySelector(filter);
@@ -106,34 +131,38 @@ const getGroupLinks = async() => {
                     return null; 
                 }
             }, filter); // today i learnt!
-
-            if (magma !== null ) {
+            // console.log(magma);
+            if (magma !== null && !duplicate.has(data.name)) {
+                duplicate.add(data.name);
                 let magmaTrimmed = ""; 
-                for (let i = magma.length-1; i >= 0; i--) {
+                for (let i = magma.length-1; i >= 0; i--) { // cleaning non-necessary info  
                     if (magma.charAt(i) === ';') { 
                         magmaTrimmed = magma.substring(0,i); 
+                        break; 
                     }
                 }
-                console.log(magmaTrimmed);
-                let g = {
+
+            // console.log(magmaTrimmed);
+            try {
+                await writeFile(convertMagmaToMatrices({
                     name: data.name, 
                     order: data.order, 
                     generators: magmaTrimmed
-                }
-                console.log(convertMagmaToMatrices(g));
-                groupData.push(g);
-                break; 
+                }))
+            } catch {
+                console.log("ran into problem writing: " + data.name);
+            }
+            break;
             }
         }
     }
-    groupData.forEach((g) => {
-        console.log(convertMagmaToMatrices(g));
-    })
+
     await browser.close();
+
     }
 
-
-
-
 // convertMagmaToMatrices("G:=sub<GL(4,GF(5))| [0,0,1,0,4,4,4,1,0,0,0,1,0,1,0,0],[1,0,0,0,2,1,3,0,4,4,3,3,0,1,0,0] >;");
-getGroupLinks();
+await getGroupLinks();
+file.write('\n]\n');
+file.end();
+file.on('finish', () => console.log('✅ Done writing all groups.'));
