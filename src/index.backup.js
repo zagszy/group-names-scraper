@@ -2,9 +2,9 @@ import puppeteer from "puppeteer";
 import { Matrix } from "./modules/matrix.js";
 import * as fs from "fs"; 
 
-// TODO: c2xs4 -> example of group with generators over Z but 3x3, fix in magmaConvert...
 // TODO: Order values are grabbed wrong -> grab on GROUP INFORMATION PAGE ITSELF rather than homepage
 // TODO: running into issues writing 2 specific groups: c2xdic6, c11:c5. Need to investigate. 
+// TODO: LETS ACTUALLY SPLIT UP THE CODE INTO THEIR OWN FILES! Modularize
 
 let first = true; 
 const file = fs.createWriteStream('output.json'); 
