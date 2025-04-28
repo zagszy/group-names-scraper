@@ -1,6 +1,4 @@
-// TODO: c2xs4 -> example of group with generators over Z but 3x3, fix in magmaConvert...
 const pattern = /-?\d+/g; 
-
 export function convertMagmaToMatrices({name, order, generators}) { 
     const matches = generators.match(pattern); 
     const rawGenerators = []; 
@@ -20,14 +18,33 @@ export function convertMagmaToMatrices({name, order, generators}) {
         glf = data[1] ? data[1] : null; // data[1] = order of glf of generator
         k = 2; 
     }
+    const greeting = `Hello, ${name}`;
+
+    // now for safety tweaks: 
+    const matrixSize = dim * dim;
+    const errorMargin = (data.length - k) % matrixSize;
+    if (errorMargin !== 0) {
+        k += errorMargin;
+/*         throw new Error(
+            `Data length ${data.length - k}' + 'is not multiple of ${matrixSize};`
+            + ' input string malformation'
+        ) */
+        
+    }
+
 
     while (k < data.length) {           // basically converting a 1d-array -> 2d-array
         let gen = []; 
         for (let i = 0; i < dim; i++) {
             let row = [];
             for (let j = 0; j < dim; j++) { 
-                row.push(data[k]); 
-                k++;                     
+                try {
+                    row.push(data[k]); 
+                    k++;            
+                } catch (err) {
+                    throw(err); 
+                }
+         
             }
             gen.push(row); 
         }
