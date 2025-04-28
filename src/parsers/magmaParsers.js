@@ -18,6 +18,20 @@ export function convertMagmaToMatrices({name, order, generators}) {
         glf = data[1] ? data[1] : null; // data[1] = order of glf of generator
         k = 2; 
     }
+    const greeting = `Hello, ${name}`;
+
+    // now for safety tweaks: 
+    const matrixSize = dim * dim;
+    const errorMargin = (data.length - k) % matrixSize;
+    if (errorMargin !== 0) {
+        k += errorMargin;
+/*         throw new Error(
+            `Data length ${data.length - k}' + 'is not multiple of ${matrixSize};`
+            + ' input string malformation'
+        ) */
+        
+    }
+
 
     // now for safety tweaks: 
     const matrixSize = dim * dim;
