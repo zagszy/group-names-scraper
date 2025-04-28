@@ -15,6 +15,13 @@ export async function getGroupLinks(browser) {
         tables.forEach(table => {   
             const rows = Array.from(table.querySelectorAll('tr')).slice(1).map(row => { // does a few things:
                 const cells = row.querySelectorAll('td');                               // 1. table.querySelectorAll('tr) grabs row and subseq. cols
+                
+                
+                const canonicalName = cells[1]?.textContent.trim(); // TODO: check if this properly grabs label, canonical name. 
+                const label = cells[3]?.textContent.trim();
+
+
+
                 const nameLink = cells[0]?.querySelector('a');                          // 2. slice(1) grabs the data in table, slice(0) grabs header, not useful
                 const orderText = cells[2]?.textContent.trim();                         // 3. .map(row => ...) converts each 1st column into an array
                 const order = parseInt(orderText, 10);                                  // anyways, cells grabs all cells in the row, each row 6 columns, 
