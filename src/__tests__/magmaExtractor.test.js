@@ -1,5 +1,5 @@
 import { launchBrowser } from "../scraper/browser.js";
-import {extractMagmaCode, extractOrder} from "../scraper/magmaExtractor.js"; 
+import {extractMagmaCode, extractOrder, extractName} from "../scraper/magmaExtractor.js"; 
 
 jest.setTimeout(30_000); 
 
@@ -8,7 +8,16 @@ const c4 = "https://people.maths.bris.ac.uk/~matyd/GroupNames/1/C4.html";
 const c33c2 = "https://people.maths.bris.ac.uk/~matyd/GroupNames/1/C3%5E3sC2.html"; 
 const c2dic6 = "https://people.maths.bris.ac.uk/~matyd/GroupNames/1/C2xDic6.html"; 
 const c11c5 = "https://people.maths.bris.ac.uk/~matyd/GroupNames/1/C11sC5.html";
+const q8 = "https://people.maths.bris.ac.uk/~matyd/GroupNames/1/Q8.html"
 
+test('grabbing quaternion q8 should return correct name', async() => {
+    const browser = await launchBrowser(); 
+    const page = await browser.newPage(); 
+    await page.goto(q8, {waitUnti: "documentloaded"})
+    
+    const test = await extractName(page);  
+    expect(test).toEqual("Quaternion group");
+})
 
 
 test('extracting c4 should return order 4 and correct magma code', async() => { 
@@ -27,7 +36,7 @@ test('extracting c4 should return order 4 and correct magma code', async() => {
 test('checking C3^3:C2 - ', async() => {
     const browser = await launchBrowser();
     const page = await browser.newPage();
-    await page.goto(c33c2, {waitUnti: "domcontentloaded"}); 
+    await page.goto(c33c2, {waitUntil: "domcontentloaded"}); 
     
     const magma = await extractMagmaCode(page);
     const order = await extractOrder(page);
@@ -44,7 +53,7 @@ test('checking C3^3:C2 - ', async() => {
 test('checking C2:dic6', async() => { 
     const browser = await launchBrowser();
     const page = await browser.newPage();
-    await page.goto(c2dic6, {waitUnti: "domcontentloaded"}); 
+    await page.goto(c2dic6, {waitUntil: "domcontentloaded"}); 
     
     const magma = await extractMagmaCode(page);
     const order = await extractOrder(page);
@@ -59,7 +68,7 @@ test('checking C2:dic6', async() => {
 test('checking c11c5', async() => { 
     const browser = await launchBrowser();
     const page = await browser.newPage();
-    await page.goto(c11c5, {waitUnti: "domcontentloaded"}); 
+    await page.goto(c11c5, {waitUntil: "domcontentloaded"}); 
     
     const magma = await extractMagmaCode(page);
     const order = await extractOrder(page);
